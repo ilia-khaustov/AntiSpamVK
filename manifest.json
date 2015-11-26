@@ -1,0 +1,11 @@
+{
+  "name" : "AntiSpamVK",
+  "version" : "0.0.1",
+  "description" : "Блокирует розыгрыши ВК по ключевым словам.",
+  "permissions": [ "contentSettings", "tabs" ],
+  "content_scripts": [{
+    "matches": ["http://vk.com/*","https://vk.com/*"],
+    "js": ["blocker.js"]
+  }],
+  "manifest_version": 2
+}
