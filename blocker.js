@@ -1,57 +1,79 @@
-var AntiSpamVK_MARKERS = [
-  'победителя определ',
-  'победителей определ',
-  'распродажа',
-  'акция',
-  'выбиратель',
-  'выбератель',
-  'розыгрыш',
-  'розыгриш',
-  'розыгрышь',
-  'розигрыш',
-  'получит бесплатно',
-  'получет бесплатно',
-  'получат бесплатно',
-  'случай[а-я]{1,} подписчи',
-  'делать репост',
-  'делай репост'
-];
-
 var AntiSpamVK = {
-  clean: function clean() {
+  _checkRegexp: new RegExp(
+    '(' + (
+      [
+        'победителя определ',
+        'победителей определ',
+        'распродажа',
+        'акция',
+        'выбиратель',
+        'выбератель',
+        'розыгрыш',
+        'розыгриш',
+        'розыгрышь',
+        'розигрыш',
+        'получит бесплатно',
+        'получет бесплатно',
+        'получат бесплатно',
+        'разместить данный пост',
+        'случай[а-я]{1,} подписчи',
+        'дела[а-я]{1,} репост'
+      ].join(')|(')
+    ) + ')',
+    'ig'
+  ),
+  check: function check(text) {
+    return text.toLowerCase().match(this._checkRegexp);
+  },
+  block: function block(element) {
+    var deleteBtn,
+        deleteBtnCandidates = element.getElementsByClassName('post_delete_button');
+    if (deleteBtnCandidates.length) deleteBtn = deleteBtnCandidates[0];
+    if (deleteBtn) deleteBtn.click();
+  },
+  run: function run() {
+    var CLASS_CHECKED = 'antispamvk-checked',
+        CLASS_BLOCKED = 'antispamvk-blocked';
     var posts = document.getElementsByClassName('post');
     for (var i=0; i<posts.length; i++) {
       var post = posts[i];
-      if (post.className.indexOf('antispamvk-checked')) > -1) continue;
-      var test = '(' + AntiSpamVK_MARKERS.join(')|(') + ')';
-      if (post.innerText.toLowerCase().match(new RegExp(test,'ig'))) {
-        if (post.getElementsByClassName('post_delete_button').length === 0) {
-          return;
-        }
-        var deleteBtn = post.getElementsByClassName('post_delete_button')[0];
-        if (!deleteBtn) {
-          return;
-        }
-        deleteBtn.click()
+      if (post.className.indexOf(CLASS_CHECKED) > -1) continue;
+      var text = '';
+      var textParts = [];
+      Array.prototype.push.apply(
+        textParts,
+        post.getElementsByClassName('wall_post_text')
+      );
+      Array.prototype.push.apply(
+        textParts,
+        post.getElementsByClassName('wall_text')
+      );
+      if (textParts.length) {
+        text += textParts.map(function(part) { return part.innerHTML || ''; });
       }
-      post.className = post.className + ' ' + ('antispamvk-checked');
+      if (this.check(text)) {
+        this.block(post);
+        post.className = post.className + ' ' + CLASS_BLOCKED;
+      }
+      post.className = post.className + ' ' + CLASS_CHECKED;
     }
   }
-}
+};
 
-AntiSpamVK.clean();
+AntiSpamVK.run();
 
 setTimeout(function() {
-  AntiSpamVK.clean();
+  AntiSpamVK.run();
 }, 200);
 setTimeout(function() {
-  AntiSpamVK.clean();
+  AntiSpamVK.run();
 }, 500);
 setTimeout(function() {
-  AntiSpamVK.clean();
+  AntiSpamVK.run();
+  setInterval(function() {
+    AntiSpamVK.run();
+  }, 1000);
 }, 1000);
 
-setInterval(function() {
-  AntiSpamVK.clean();
-}, 1000);
+
 
